@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartApply — Job Application Autofill</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-shell">
+    <header class="popup-header">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <h1>SmartApply</h1>
+          <p>Brave Job Autofill</p>
+        </div>
+      </div>
+      <button id="open-dashboard-btn" class="icon-btn" title="Open Full Profile Dashboard">Edit Profile ↗</button>
+    </header>
+
+    <section class="profile-switcher">
+      <label for="active-profile-select">Active Profile Variant</label>
+      <select id="active-profile-select"></select>
+    </section>
+
+    <section class="completion-card">
+      <div class="completion-row">
+        <span>Profile Completion</span>
+        <strong id="completion-percent">0%</strong>
+      </div>
+      <div class="progress-track">
+        <div id="completion-bar" class="progress-fill" style="width: 0%"></div>
+      </div>
+      <p id="completion-subtext" class="completion-sub"></p>
+    </section>
+
+    <section class="action-section">
+      <button id="autofill-page-btn" class="primary-btn">⚡ Autofill Current Page</button>
+      <button id="scan-page-btn" class="secondary-btn">🔍 Preview Detected Fields</button>
+    </section>
+
+    <div id="popup-alert" class="popup-alert hidden"></div>
+
+    <section class="scan-results">
+      <div class="scan-header">
+        <span>Detected Form Fields</span>
+        <span id="scan-count-pill" class="count-pill">0 matched</span>
+      </div>
+      <div id="scan-list" class="scan-list">
+        <div class="empty-note">Click "Preview Detected Fields" or "Autofill Current Page" on any job form.</div>
+      </div>
+    </section>
+
+    <footer class="popup-footer">
+      <span>🔒 100% Local Storage</span>
+      <a href="../test/sample-job-application.html" target="_blank">Open Test Job Form ↗</a>
+    </footer>
+  </div>
+
+  <script src="../utils/sample-profile.js"></script>
+  <script src="../utils/storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

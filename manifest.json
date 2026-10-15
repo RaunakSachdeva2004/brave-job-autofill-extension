@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "SmartApply — Job Application Autofill for Brave",
+  "version": "1.0.0",
+  "description": "Privacy-first, one-click smart job application autofill extension for Brave Browser with multi-profile support, smart suggestions, and local storage.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SmartApply Autofill",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "utils/sample-profile.js",
+        "utils/storage.js",
+        "content/matcher.js",
+        "content/autofill.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/widget.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

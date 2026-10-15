@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartApply Profile Dashboard</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-badge">⚡</div>
+        <div>
+          <h2>SmartApply</h2>
+          <span>Brave Autofill Studio</span>
+        </div>
+      </div>
+
+      <div class="profile-selector-box">
+        <label for="profile-variant-select">Active Profile Variant</label>
+        <select id="profile-variant-select"></select>
+        <button id="new-profile-btn" class="btn-outline-sm">+ New Role Profile</button>
+      </div>
+
+      <div class="completion-widget">
+        <div class="comp-top">
+          <span>Profile Completeness</span>
+          <strong id="dash-comp-percent">0%</strong>
+        </div>
+        <div class="comp-bar-bg">
+          <div id="dash-comp-bar" class="comp-bar-fill" style="width: 0%"></div>
+        </div>
+        <p id="dash-comp-missing" class="comp-hint"></p>
+      </div>
+
+      <nav class="side-nav">
+        <a href="#sec-personal" class="nav-link active">👤 Personal Details</a>
+        <a href="#sec-education" class="nav-link">🎓 Education</a>
+        <a href="#sec-professional" class="nav-link">💼 Professional & Resume</a>
+        <a href="#sec-socials" class="nav-link">🔗 Social & Coding Links</a>
+        <a href="#sec-preferences" class="nav-link">🎯 Job Preferences</a>
+        <a href="#sec-custom" class="nav-link">💬 Reusable Q&A & Custom</a>
+        <a href="#sec-data" class="nav-link">🛡️ Backup & Privacy</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="../test/sample-job-application.html" target="_blank" class="test-form-link">🧪 Open Sample Job Form ↗</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="StickyTopBar">
+        <div>
+          <h1 id="current-profile-heading">General Software Engineer</h1>
+          <p class="subtitle">Saved locally in Brave via chrome.storage.local • Never sent to external servers</p>
+        </div>
+        <div class="top-actions">
+          <button id="load-sample-btn" class="btn-secondary">Load Sample Dummy Data</button>
+          <button id="save-profile-btn" class="btn-primary">💾 Save Profile Changes</button>
+        </div>
+      </header>
+
+      <div id="toast-banner" class="toast-banner hidden"></div>
+
+      <form id="profile-form" onsubmit="return false;">
+        <!-- A1. Personal Details -->
+        <section id="sec-personal" class="card-section">
+          <div class="section-header">
+            <h3>👤 Personal Details</h3>
+            <p>Core identity and contact fields matched across job portals.</p>
+          </div>
+          <div class="grid-2">
+            <div class="form-field">
+              <label>Profile Display Name</label>
+              <input type="text" id="profileName" placeholder="e.g., General Software Engineer" />
+            </div>
+            <div class="form-field">
+              <label>Full Name</label>
+              <input type="text" id="personal.fullName" placeholder="e.g., Aarav Sharma" />
+            </div>
+            <div class="form-field">
+              <label>First Name (Auto-derived or custom)</label>
+              <input type="text" id="personal.firstName" placeholder="e.g., Aarav" />
+            </div>
+            <div class="form-field">
+              <label>Last Name</label>
+              <input type="text" id="personal.lastName" placeholder="e.g., Sharma" />
+            </div>
+            <div class="form-field">
+              <label>Email Address</label>
+              <input type="email" id="personal.email" placeholder="name@example.com" />
+            </div>
+            <div class="form-field">
+              <label>Phone Number</label>
+              <input type="tel" id="personal.phone" placeholder="+91 9876543210" />
+            </div>
+            <div class="form-field">
+              <label>Current Location (City, State, Country)</label>
+              <input type="text" id="personal.currentLocation" placeholder="Bengaluru, Karnataka, India" />
+            </div>
+            <div class="form-field">
+              <label>Date of Birth</label>
+              <input type="date" id="personal.dateOfBirth" />
+            </div>
+          </div>
+        </section>
+
+        <!-- A2. Education -->
+        <section id="sec-education" class="card-section">
+          <div class="section-header">
+            <h3>🎓 Education Details</h3>
+            <p>University, degree, specialization, CGPA, and school board scores.</p>
+          </div>
+          <div class="grid-2">
+            <div class="form-field">
+              <label>College / University Name</label>
+              <input type="text" id="education.collegeName" placeholder="e.g., Vellore Institute of Technology" />
+            </div>
+            <div class="form-field">
+              <label>Degree</label>
+              <input type="text" id="education.degree" placeholder="e.g., Bachelor of Technology (B.Tech)" />
+            </div>
+            <div class="form-field">
+              <label>Branch / Specialization</label>
+              <input type="text" id="education.branch" placeholder="e.g., Computer Science and Engineering" />
+            </div>
+            <div class="form-field">
+              <label>Current GPA / CGPA</label>
+              <input type="text" id="education.cgpa" placeholder="e.g., 9.12" />
+            </div>
+            <div class="form-field">
+              <label>Graduation Year</label>
+              <input type="text" id="education.graduationYear" placeholder="e.g., 2025" />
+            </div>
+            <div class="form-field">
+              <label>Active Backlogs (if applicable)</label>
+              <input type="text" id="education.backlogs" placeholder="0" />
+            </div>
+            <div class="form-field">
+              <label>10th Percentage / CGPA</label>
+              <input type="text" id="education.tenthScore" placeholder="e.g., 94.6%" />
+            </div>
+            <div class="form-field">
+              <label>12th Percentage / CGPA</label>
+              <input type="text" id="education.twelfthScore" placeholder="e.g., 92.8%" />
+            </div>
+          </div>
+        </section>
+
+        <!-- A3. Professional & Resume -->
+        <section id="sec-professional" class="card-section">
+          <div class="section-header">
+            <h3>💼 Professional Details & Local Resume</h3>
+            <p>Skills, experience, projects, and local PDF resume storage for one-click attachment.</p>
+          </div>
+          <div class="grid-3">
+            <div class="form-field">
+              <label>Current / Most Recent Company</label>
+              <input type="text" id="professional.currentCompany" placeholder="e.g., NovaStack Labs" />
+            </div>
+            <div class="form-field">
+              <label>Current / Most Recent Job Title</label>
+              <input type="text" id="professional.currentTitle" placeholder="e.g., Software Engineer Intern" />
+            </div>
+            <div class="form-field">
+              <label>Total Experience (Years)</label>
+              <input type="text" id="professional.totalExperienceYears" placeholder="e.g., 1" />
+            </div>
+          </div>
+          <div class="form-field full-width">
+            <label>Technical Skills (Comma-separated)</label>
+            <input type="text" id="professional.technicalSkills" placeholder="JavaScript, TypeScript, Python, React, Node.js, SQL..." />
+          </div>
+          <div class="form-field full-width">
+            <label>Certifications</label>
+            <input type="text" id="professional.certifications" placeholder="AWS Certified Cloud Practitioner..." />
+          </div>
+          <div class="form-field full-width">
+            <label>Work Experience Summary</label>
+            <textarea id="professional.workExperienceSummary" rows="3" placeholder="Summarize key internships or full-time roles..."></textarea>
+          </div>
+          <div class="form-field full-width">
+            <label>Projects Summary</label>
+            <textarea id="professional.projectsSummary" rows="3" placeholder="Highlight your top 2-3 technical projects and impact..."></textarea>
+          </div>
+
+          <div class="resume-upload-box">
+            <div>
+              <strong>📄 Local Resume File (PDF / DOCX)</strong>
+              <p id="resume-status-text">No file uploaded yet.</p>
+            </div>
+            <div class="resume-actions">
+              <input type="file" id="resume-file-input" accept=".pdf,.doc,.docx" />
+            </div>
+          </div>
+        </section>
+
+        <!-- A4. Social & Coding Profiles -->
+        <section id="sec-socials" class="card-section">
+          <div class="section-header">
+            <h3>🔗 Social & Coding Profiles</h3>
+            <p>Links automatically matched to LinkedIn, GitHub, LeetCode, and Portfolio fields.</p>
+          </div>
+          <div class="grid-2">
+            <div class="form-field">
+              <label>LinkedIn Profile URL</label>
+              <input type="url" id="socials.linkedin" placeholder="https://www.linkedin.com/in/yourprofile" />
+            </div>
+            <div class="form-field">
+              <label>GitHub Profile URL</label>
+              <input type="url" id="socials.github" placeholder="https://github.com/yourusername" />
+            </div>
+            <div class="form-field">
+              <label>LeetCode / Coding Profile URL</label>
+              <input type="url" id="socials.leetcode" placeholder="https://leetcode.com/u/yourusername" />
+            </div>
+            <div class="form-field">
+              <label>Portfolio / Personal Website</label>
+              <input type="url" id="socials.portfolio" placeholder="https://yourportfolio.dev" />
+            </div>
+            <div class="form-field">
+              <label>Other Link (Kaggle, HuggingFace, Blog, etc.)</label>
+              <input type="url" id="socials.otherLink" placeholder="https://kaggle.com/yourusername" />
+            </div>
+          </div>
+        </section>
+
+        <!-- A5. Job Preferences -->
+        <section id="sec-preferences" class="card-section">
+          <div class="section-header">
+            <h3>🎯 Job Preferences</h3>
+            <p>Default role, location, employment type, and notice period preferences.</p>
+          </div>
+          <div class="grid-2">
+            <div class="form-field">
+              <label>Preferred Role</label>
+              <input type="text" id="preferences.preferredRole" placeholder="e.g., Software Development Engineer" />
+            </div>
+            <div class="form-field">
+              <label>Preferred Location</label>
+              <input type="text" id="preferences.preferredLocation" placeholder="e.g., Bengaluru, Hyderabad, Remote" />
+            </div>
+            <div class="form-field">
+              <label>Employment Type</label>
+              <select id="preferences.employmentType">
+                <option value="">— Select —</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Internship">Internship</option>
+                <option value="Contract">Contract</option>
+                <option value="Part-time">Part-time</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Notice Period / Availability</label>
+              <input type="text" id="preferences.noticePeriod" placeholder="e.g., Immediate / 15 Days" />
+            </div>
+            <div class="form-field">
+              <label>Expected CTC / Compensation</label>
+              <input type="text" id="preferences.expectedCtc" placeholder="e.g., 14 LPA" />
+            </div>
+            <div class="form-field">
+              <label>Work Authorization</label>
+              <input type="text" id="preferences.workAuthorization" placeholder="Authorized to work in India" />
+            </div>
+          </div>
+        </section>
+
+        <!-- G. Custom Questions & Reusable Answers -->
+        <section id="sec-custom" class="card-section">
+          <div class="section-header-inline">
+            <div>
+              <h3>💬 Reusable Application Answers & Custom Fields</h3>
+              <p>Add custom questions (e.g., "Why should we hire you?") and comma-separated keyword aliases.</p>
+            </div>
+            <button type="button" id="add-custom-field-btn" class="btn-secondary">+ Add Custom Question</button>
+          </div>
+          <div id="custom-fields-container" class="custom-fields-list"></div>
+        </section>
+
+        <!-- Privacy, Export, Import, Delete -->
+        <section id="sec-data" class="card-section">
+          <div class="section-header">
+            <h3>🛡️ Data Portability & Privacy Controls</h3>
+            <p>Export your profiles as JSON for backup, import an existing JSON backup, or wipe all local data.</p>
+          </div>
+          <div class="data-actions-bar">
+            <button type="button" id="export-json-btn" class="btn-secondary">⬇️ Export Profiles (JSON)</button>
+            <label class="btn-secondary file-label-btn">
+              ⬆️ Import Profiles (JSON)
+              <input type="file" id="import-json-input" accept=".json" style="display:none;" />
+            </label>
+            <button type="button" id="delete-all-btn" class="btn-danger">🗑️ Delete All Saved Data</button>
+          </div>
+        </section>
+      </form>
+    </main>
+  </div>
+
+  <!-- Modal for creating a new profile variant -->
+  <div id="new-profile-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>Create New Profile Variant</h3>
+      <p>Tailor separate profiles for AI/ML, Full-Stack, or Data Analyst roles.</p>
+      <div class="form-field" style="margin-top:12px;">
+        <label>Profile Name</label>
+        <input type="text" id="new-profile-name-input" placeholder="e.g., Backend Engineer Profile" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="cancel-new-profile-btn" class="btn-secondary">Cancel</button>
+        <button type="button" id="confirm-new-profile-btn" class="btn-primary">Create Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../utils/sample-profile.js"></script>
+  <script src="../utils/storage.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

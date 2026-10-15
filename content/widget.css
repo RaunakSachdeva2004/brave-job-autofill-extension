@@ -1,0 +1,244 @@
+/**
+ * content/widget.css
+ * Styles for the floating SmartApply button and slide-over review drawer on job portals.
+ */
+#smartapply-floating-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483640;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+  color: #0f172a;
+}
+
+.sa-fab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.5), 0 4px 10px -2px rgba(15, 23, 42, 0.2);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sa-fab-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -5px rgba(79, 70, 229, 0.65);
+}
+
+.sa-fab-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.sa-panel {
+  position: fixed;
+  bottom: 78px;
+  right: 24px;
+  width: 390px;
+  max-width: calc(100vw - 32px);
+  max-height: 76vh;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 2147483641;
+}
+
+.sa-panel.sa-hidden {
+  display: none;
+}
+
+.sa-panel-header {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sa-panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sa-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sa-close-btn:hover {
+  color: #ffffff;
+}
+
+.sa-profile-bar {
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.sa-profile-select {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.sa-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sa-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.sa-btn-primary {
+  grid-column: span 2;
+  background: #4f46e5;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.sa-btn-primary:hover {
+  background: #4338ca;
+}
+
+.sa-btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #e2e8f0;
+}
+
+.sa-btn-secondary:hover, .sa-btn-secondary.sa-active {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+}
+
+.sa-status-banner {
+  margin: 0 16px 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  display: none;
+}
+
+.sa-body-list {
+  padding: 10px 16px 14px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sa-field-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: #ffffff;
+  font-size: 12px;
+}
+
+.sa-field-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.sa-field-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sa-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+
+.sa-pill-matched {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sa-pill-missing {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.sa-pill-suggestion {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.sa-field-val {
+  color: #475569;
+  word-break: break-word;
+  font-size: 11.5px;
+  margin-bottom: 6px;
+}
+
+.sa-manual-select {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 11.5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.sa-footer-note {
+  padding: 8px 16px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+}
