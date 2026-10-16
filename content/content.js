@@ -14,11 +14,50 @@
   let scannedFields = [];
   let currentTabFilter = "all"; // "all" | "missing" | "suggestions"
   let isDismissedOnThisTab = false;
+  let isTornDown = false;
+  let domObserver = null;
+
+  function isExtensionContextValid() {
+    try {
+      return typeof chrome !== "undefined" && Boolean(chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const isExtensionValid = isExtensionContextValid;
+
+  function teardownOrphanedContentScript() {
+    if (isTornDown) return;
+    isTornDown = true;
+    if (domObserver) {
+      try {
+        domObserver.disconnect();
+      } catch (e) {}
+      domObserver = null;
+    }
+    const container = document.getElementById("smartapply-floating-container");
+    if (container) {
+      container.remove();
+    }
+  }
+
+  const cleanupInvalidatedContext = teardownOrphanedContentScript;
 
   async function refreshState() {
-    currentState = await window.SmartApplyStorage.getState();
-    activeProfile = await window.SmartApplyStorage.getActiveProfile();
-    scannedFields = window.SmartApplyMatcher.scanPageFields(activeProfile);
+    if (!isExtensionContextValid()) {
+      teardownOrphanedContentScript();
+      return;
+    }
+    try {
+      currentState = await window.SmartApplyStorage.getState();
+      activeProfile = await window.SmartApplyStorage.getActiveProfile();
+      scannedFields = window.SmartApplyMatcher.scanPageFields(activeProfile);
+    } catch (e) {
+      if (!isExtensionContextValid()) {
+        teardownOrphanedContentScript();
+      }
+    }
   }
 
   const BLOCKED_DOMAINS = [
@@ -76,6 +115,10 @@
   }
 
   function updateWidgetVisibility() {
+    if (!isExtensionValid()) {
+      cleanupInvalidatedContext();
+      return;
+    }
     const container = document.getElementById("smartapply-floating-container");
     const isEnabled = currentState?.settings?.showFloatingButton !== false;
     const matchedCount = countMatchedFields();
@@ -151,6 +194,10 @@
     const openProfileBtn = document.getElementById("sa-open-profile-btn");
 
     fabBtn.addEventListener("click", async () => {
+      if (!isExtensionValid()) {
+        cleanupInvalidatedContext();
+        return;
+      }
       await refreshState();
       panel.classList.toggle("sa-hidden");
       renderPanelContents();
@@ -170,12 +217,20 @@
     });
 
     profileSelect.addEventListener("change", async (e) => {
+      if (!isExtensionValid()) {
+        cleanupInvalidatedContext();
+        return;
+      }
       await window.SmartApplyStorage.setActiveProfileId(e.target.value);
       await refreshState();
       renderPanelContents();
     });
 
     autofillBtn.addEventListener("click", async () => {
+      if (!isExtensionValid()) {
+        cleanupInvalidatedContext();
+        return;
+      }
       await refreshState();
       const summary = window.SmartApplyAutofill.autofillDetectedFields(scannedFields, activeProfile);
       showStatusBanner(
@@ -204,8 +259,16 @@
     });
 
     openProfileBtn.addEventListener("click", () => {
-      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" });
+      if (isExtensionValid() && chrome.runtime && chrome.runtime.sendMessage) {
+        try {
+          chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" }, () => {
+            if (chrome.runtime.lastError) {
+              // Ignore or fallback
+            }
+          });
+        } catch (e) {
+          cleanupInvalidatedContext();
+        }
       } else {
         window.open("../options/options.html", "_blank");
       }
@@ -351,74 +414,104 @@
   }
 
   // Listen for commands from Toolbar Popup
-  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
-    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-      if (!msg || !msg.action) return false;
-
-      if (msg.action === "SCAN_PAGE") {
-        refreshState().then(() => {
-          const serialized = scannedFields.map((f) => ({
-            index: f.index,
-            fieldLabel: f.fieldLabel,
-            pageLabel: f.signals.primaryDisplayLabel,
-            status: f.status,
-            confidence: f.confidence,
-            value: f.value
-          }));
-          sendResponse({ ok: true, fields: serialized });
-        });
-        return true;
-      }
-
-      if (msg.action === "TRIGGER_AUTOFILL") {
-        refreshState().then(() => {
-          const summary = window.SmartApplyAutofill.autofillDetectedFields(scannedFields, activeProfile);
-          renderPanelContents();
-          sendResponse({ ok: true, summary });
-        });
-        return true;
-      }
-
-      if (msg.action === "SETTINGS_UPDATED") {
-        if (currentState && msg.settings) {
-          currentState.settings = msg.settings;
+  if (isExtensionValid() && chrome.runtime && chrome.runtime.onMessage) {
+    try {
+      chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+        if (!isExtensionValid()) {
+          cleanupInvalidatedContext();
+          return false;
         }
-        updateWidgetVisibility();
-        sendResponse({ ok: true });
-        return true;
-      }
+        if (!msg || !msg.action) return false;
 
-      return false;
-    });
+        if (msg.action === "SCAN_PAGE") {
+          refreshState().then(() => {
+            if (!isExtensionValid()) return;
+            const serialized = scannedFields.map((f) => ({
+              index: f.index,
+              fieldLabel: f.fieldLabel,
+              pageLabel: f.signals.primaryDisplayLabel,
+              status: f.status,
+              confidence: f.confidence,
+              value: f.value
+            }));
+            try {
+              sendResponse({ ok: true, fields: serialized });
+            } catch (e) {}
+          });
+          return true;
+        }
+
+        if (msg.action === "TRIGGER_AUTOFILL") {
+          refreshState().then(() => {
+            if (!isExtensionValid()) return;
+            const summary = window.SmartApplyAutofill.autofillDetectedFields(scannedFields, activeProfile);
+            renderPanelContents();
+            try {
+              sendResponse({ ok: true, summary });
+            } catch (e) {}
+          });
+          return true;
+        }
+
+        if (msg.action === "SETTINGS_UPDATED") {
+          if (currentState && msg.settings) {
+            currentState.settings = msg.settings;
+          }
+          updateWidgetVisibility();
+          try {
+            sendResponse({ ok: true });
+          } catch (e) {}
+          return true;
+        }
+
+        return false;
+      });
+    } catch (e) {}
   }
 
   // Auto-sync setting updates across all open tabs
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === "local" && changes["smartapply_state_v1"]) {
-        const newVal = changes["smartapply_state_v1"].newValue;
-        if (newVal) {
-          currentState = newVal;
-          updateWidgetVisibility();
+  if (isExtensionValid() && chrome.storage && chrome.storage.onChanged) {
+    try {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (!isExtensionValid()) {
+          cleanupInvalidatedContext();
+          return;
         }
-      }
-    });
+        if (area === "local" && changes["smartapply_state_v1"]) {
+          const newVal = changes["smartapply_state_v1"].newValue;
+          if (newVal) {
+            currentState = newVal;
+            updateWidgetVisibility();
+          }
+        }
+      });
+    } catch (e) {}
   }
 
   async function init() {
+    if (!isExtensionValid()) return;
     await refreshState();
     updateWidgetVisibility();
 
     // Observe dynamic DOM mutations (SPA portals like Workday, Greenhouse, Ashby)
     let debounceTimer = null;
     const observer = new MutationObserver(() => {
+      if (!isExtensionValid()) {
+        cleanupInvalidatedContext();
+        return;
+      }
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
+        if (!isExtensionValid()) {
+          cleanupInvalidatedContext();
+          return;
+        }
         if (isDismissedOnThisTab) return;
         await refreshState();
         updateWidgetVisibility();
       }, 600);
     });
+    domObserver = observer;
     observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 

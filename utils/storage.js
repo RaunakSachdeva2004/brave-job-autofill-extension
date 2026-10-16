@@ -6,8 +6,20 @@
 (function(global) {
   const STORAGE_KEY = "smartapply_state_v1";
 
+  function isExtensionContextValid() {
+    try {
+      return typeof chrome !== "undefined" && Boolean(chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
   function hasChromeStorage() {
-    return typeof chrome !== "undefined" && chrome.storage && chrome.storage.local;
+    try {
+      return isExtensionContextValid() && Boolean(chrome.storage && chrome.storage.local);
+    } catch (e) {
+      return false;
+    }
   }
 
   function createInitialState() {
@@ -23,42 +35,81 @@
     };
   }
 
+  function readLocalStorageState() {
+    try {
+      if (typeof localStorage === "undefined") return null;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.profiles) {
+          if (!parsed.settings) {
+            parsed.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
+          } else if (parsed.settings.showFloatingButton === undefined) {
+            parsed.settings.showFloatingButton = true;
+          }
+          return parsed;
+        }
+      }
+    } catch (e) {
+      // Ignore storage error
+    }
+    return null;
+  }
+
+  function writeLocalStorageState(newState) {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+      }
+    } catch (e) {
+      // Ignore storage error
+    }
+  }
+
   const SmartApplyStorage = {
+    isExtensionValid: isExtensionContextValid,
+
     async getState() {
       if (hasChromeStorage()) {
-        return new Promise((resolve) => {
-          chrome.storage.local.get([STORAGE_KEY], (res) => {
-            if (res && res[STORAGE_KEY] && res[STORAGE_KEY].profiles) {
-              const state = res[STORAGE_KEY];
-              if (!state.settings) {
-                state.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
-              } else if (state.settings.showFloatingButton === undefined) {
-                state.settings.showFloatingButton = true;
-              }
-              resolve(state);
-            } else {
-              const initial = createInitialState();
-              chrome.storage.local.set({ [STORAGE_KEY]: initial }, () => resolve(initial));
+        try {
+          return await new Promise((resolve) => {
+            try {
+              chrome.storage.local.get([STORAGE_KEY], (res) => {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                  const fallback = readLocalStorageState() || createInitialState();
+                  return resolve(fallback);
+                }
+                if (res && res[STORAGE_KEY] && res[STORAGE_KEY].profiles) {
+                  const state = res[STORAGE_KEY];
+                  if (!state.settings) {
+                    state.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
+                  } else if (state.settings.showFloatingButton === undefined) {
+                    state.settings.showFloatingButton = true;
+                  }
+                  resolve(state);
+                } else {
+                  const initial = createInitialState();
+                  try {
+                    chrome.storage.local.set({ [STORAGE_KEY]: initial }, () => resolve(initial));
+                  } catch (e) {
+                    resolve(initial);
+                  }
+                }
+              });
+            } catch (syncErr) {
+              const fallback = readLocalStorageState() || createInitialState();
+              resolve(fallback);
             }
           });
-        });
-      }
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && parsed.profiles) {
-            if (!parsed.settings) {
-              parsed.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
-            } else if (parsed.settings.showFloatingButton === undefined) {
-              parsed.settings.showFloatingButton = true;
-            }
-            return parsed;
-          }
+        } catch (e) {
+          const fallback = readLocalStorageState() || createInitialState();
+          return fallback;
         }
-      } catch (e) {
-        // Ignore storage error
       }
+
+      const localState = readLocalStorageState();
+      if (localState) return localState;
+
       const initial = createInitialState();
       await this.setState(initial);
       return initial;
@@ -66,15 +117,26 @@
 
     async setState(newState) {
       if (hasChromeStorage()) {
-        return new Promise((resolve) => {
-          chrome.storage.local.set({ [STORAGE_KEY]: newState }, () => resolve(newState));
-        });
+        try {
+          return await new Promise((resolve) => {
+            try {
+              chrome.storage.local.set({ [STORAGE_KEY]: newState }, () => {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                  writeLocalStorageState(newState);
+                }
+                resolve(newState);
+              });
+            } catch (err) {
+              writeLocalStorageState(newState);
+              resolve(newState);
+            }
+          });
+        } catch (err) {
+          writeLocalStorageState(newState);
+          return newState;
+        }
       }
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-      } catch (e) {
-        // Ignore storage error
-      }
+      writeLocalStorageState(newState);
       return newState;
     },
 

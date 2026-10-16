@@ -75,30 +75,45 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   function sendTabMessage(payload, callback) {
-    if (typeof chrome === "undefined" || !chrome.tabs) {
+    if (typeof chrome === "undefined" || !chrome.tabs || !chrome.runtime || !chrome.runtime.id) {
       if (payload.action !== "SETTINGS_UPDATED") {
         showAlert("Open this popup from the Brave extension toolbar on an active web page.", true);
       }
       return;
     }
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs && tabs[0];
-      if (!tab || !tab.id) {
-        if (payload.action !== "SETTINGS_UPDATED") {
-          showAlert("No active tab detected.", true);
-        }
-        return;
-      }
-      chrome.tabs.sendMessage(tab.id, payload, (response) => {
-        if (chrome.runtime.lastError || !response) {
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (chrome.runtime && chrome.runtime.lastError) return;
+        const tab = tabs && tabs[0];
+        if (!tab || !tab.id) {
           if (payload.action !== "SETTINGS_UPDATED") {
-            showAlert("Refresh the job page once after installing the extension, or open the Test Job Form below.", true);
+            showAlert("No active tab detected.", true);
           }
           return;
         }
-        if (callback) callback(response);
+        try {
+          chrome.tabs.sendMessage(tab.id, payload, (response) => {
+            if (chrome.runtime && chrome.runtime.lastError) {
+              if (payload.action !== "SETTINGS_UPDATED") {
+                showAlert("Please reload the job page once after updating the extension.", true);
+              }
+              return;
+            }
+            if (!response) {
+              if (payload.action !== "SETTINGS_UPDATED") {
+                showAlert("Refresh the job page once after installing/updating the extension, or open the Test Job Form below.", true);
+              }
+              return;
+            }
+            if (callback) callback(response);
+          });
+        } catch (e) {
+          if (payload.action !== "SETTINGS_UPDATED") {
+            showAlert("Please reload the job page once after updating the extension.", true);
+          }
+        }
       });
-    });
+    } catch (e) {}
   }
 
   function scanActiveTab() {
