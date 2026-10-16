@@ -35,3 +35,7 @@ yarn-error.log*
 *.tmp
 *.bak
 *~
+
+# Local & exported user data
+data/
+
