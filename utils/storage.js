@@ -29,7 +29,13 @@
         return new Promise((resolve) => {
           chrome.storage.local.get([STORAGE_KEY], (res) => {
             if (res && res[STORAGE_KEY] && res[STORAGE_KEY].profiles) {
-              resolve(res[STORAGE_KEY]);
+              const state = res[STORAGE_KEY];
+              if (!state.settings) {
+                state.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
+              } else if (state.settings.showFloatingButton === undefined) {
+                state.settings.showFloatingButton = true;
+              }
+              resolve(state);
             } else {
               const initial = createInitialState();
               chrome.storage.local.set({ [STORAGE_KEY]: initial }, () => resolve(initial));
@@ -41,7 +47,14 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed && parsed.profiles) return parsed;
+          if (parsed && parsed.profiles) {
+            if (!parsed.settings) {
+              parsed.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
+            } else if (parsed.settings.showFloatingButton === undefined) {
+              parsed.settings.showFloatingButton = true;
+            }
+            return parsed;
+          }
         }
       } catch (e) {
         // Ignore storage error

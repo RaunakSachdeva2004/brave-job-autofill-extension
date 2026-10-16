@@ -13,6 +13,7 @@
   let activeProfile = null;
   let scannedFields = [];
   let currentTabFilter = "all"; // "all" | "missing" | "suggestions"
+  let isDismissedOnThisTab = false;
 
   async function refreshState() {
     currentState = await window.SmartApplyStorage.getState();
@@ -20,9 +21,78 @@
     scannedFields = window.SmartApplyMatcher.scanPageFields(activeProfile);
   }
 
+  const BLOCKED_DOMAINS = [
+    "youtube.com",
+    "google.com",
+    "github.com",
+    "x.com",
+    "twitter.com",
+    "reddit.com",
+    "netflix.com"
+  ];
+
+  const JOB_KEYWORDS = [
+    "apply",
+    "careers",
+    "career",
+    "job",
+    "jobs",
+    "application",
+    "workday",
+    "greenhouse",
+    "lever",
+    "ashby",
+    "smartrecruiters"
+  ];
+
+  function isBlockedDomain() {
+    const host = (window.location.hostname || "").toLowerCase();
+    if (!host) return false;
+    return BLOCKED_DOMAINS.some((domain) => host === domain || host.endsWith("." + domain));
+  }
+
+  function hasJobKeywords() {
+    const text = (window.location.href + " " + (document.title || "")).toLowerCase();
+    return JOB_KEYWORDS.some((kw) => text.includes(kw));
+  }
+
+  function countMatchedFields() {
+    return scannedFields.filter((f) => f.status === "matched" || f.status === "file_resume").length;
+  }
+
   function isLikelyFormPage() {
-    const inputs = document.querySelectorAll("input:not([type='hidden']):not([type='submit']), textarea, select");
-    return inputs.length >= 2;
+    if (isDismissedOnThisTab) return false;
+    if (isBlockedDomain()) return false;
+
+    const inputs = document.querySelectorAll(
+      "input:not([type='hidden']):not([type='submit']):not([type='button']), textarea, select"
+    );
+    if (inputs.length < 2) return false;
+
+    const matchedCount = countMatchedFields();
+    if (matchedCount === 0) return false;
+
+    return matchedCount >= 3 || hasJobKeywords();
+  }
+
+  function updateWidgetVisibility() {
+    const container = document.getElementById("smartapply-floating-container");
+    const isEnabled = currentState?.settings?.showFloatingButton !== false;
+    const matchedCount = countMatchedFields();
+
+    if (!isEnabled || isDismissedOnThisTab || matchedCount === 0 || !isLikelyFormPage()) {
+      if (container) {
+        container.style.display = "none";
+      }
+      return;
+    }
+
+    if (!container) {
+      createFloatingWidget();
+    } else {
+      container.style.display = "";
+    }
+    renderPanelContents();
   }
 
   function createFloatingWidget() {
@@ -57,10 +127,13 @@
           🔒 Local-only storage • Never auto-submits forms
         </div>
       </div>
-      <button id="sa-fab-trigger" class="sa-fab-btn" title="Open SmartApply Job Autofill">
-        <span>⚡ Autofill Job Form</span>
-        <span id="sa-fab-count" class="sa-fab-badge">0</span>
-      </button>
+      <div class="sa-fab-wrapper">
+        <button id="sa-fab-trigger" class="sa-fab-btn" title="Open SmartApply Job Autofill">
+          <span>⚡ Autofill Job Form</span>
+          <span id="sa-fab-count" class="sa-fab-badge">0</span>
+        </button>
+        <button id="sa-fab-dismiss" class="sa-fab-dismiss-btn" title="Hide for this tab" aria-label="Dismiss">×</button>
+      </div>
     `;
 
     document.body.appendChild(container);
@@ -68,6 +141,7 @@
     // Event bindings
     const panel = document.getElementById("sa-panel");
     const fabBtn = document.getElementById("sa-fab-trigger");
+    const dismissBtn = document.getElementById("sa-fab-dismiss");
     const closeBtn = document.getElementById("sa-close-btn");
     const profileSelect = document.getElementById("sa-profile-select");
     const autofillBtn = document.getElementById("sa-autofill-now-btn");
@@ -81,6 +155,15 @@
       panel.classList.toggle("sa-hidden");
       renderPanelContents();
     });
+
+    if (dismissBtn) {
+      dismissBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isDismissedOnThisTab = true;
+        const c = document.getElementById("smartapply-floating-container");
+        if (c) c.style.display = "none";
+      });
+    }
 
     closeBtn.addEventListener("click", () => {
       panel.classList.add("sa-hidden");
@@ -147,8 +230,17 @@
   }
 
   function renderPanelContents() {
+    const matchedCount = countMatchedFields();
+    const container = document.getElementById("smartapply-floating-container");
+
+    if (matchedCount === 0) {
+      if (container) {
+        container.style.display = "none";
+      }
+      return;
+    }
+
     const countBadge = document.getElementById("sa-fab-count");
-    const matchedCount = scannedFields.filter((f) => f.status === "matched" || f.status === "file_resume").length;
     if (countBadge) countBadge.textContent = String(matchedCount);
 
     const profileSelect = document.getElementById("sa-profile-select");
@@ -287,31 +379,44 @@
         return true;
       }
 
+      if (msg.action === "SETTINGS_UPDATED") {
+        if (currentState && msg.settings) {
+          currentState.settings = msg.settings;
+        }
+        updateWidgetVisibility();
+        sendResponse({ ok: true });
+        return true;
+      }
+
       return false;
+    });
+  }
+
+  // Auto-sync setting updates across all open tabs
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && changes["smartapply_state_v1"]) {
+        const newVal = changes["smartapply_state_v1"].newValue;
+        if (newVal) {
+          currentState = newVal;
+          updateWidgetVisibility();
+        }
+      }
     });
   }
 
   async function init() {
     await refreshState();
-    if (currentState?.settings?.showFloatingButton !== false && isLikelyFormPage()) {
-      createFloatingWidget();
-      renderPanelContents();
-    }
+    updateWidgetVisibility();
 
     // Observe dynamic DOM mutations (SPA portals like Workday, Greenhouse, Ashby)
     let debounceTimer = null;
     const observer = new MutationObserver(() => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
-        if (currentState?.settings?.showFloatingButton !== false && isLikelyFormPage()) {
-          createFloatingWidget();
-          scannedFields = window.SmartApplyMatcher.scanPageFields(activeProfile);
-          const badge = document.getElementById("sa-fab-count");
-          if (badge) {
-            const count = scannedFields.filter((f) => f.status === "matched" || f.status === "file_resume").length;
-            badge.textContent = String(count);
-          }
-        }
+        if (isDismissedOnThisTab) return;
+        await refreshState();
+        updateWidgetVisibility();
       }, 600);
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });

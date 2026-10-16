@@ -11,6 +11,38 @@
   color: #0f172a;
 }
 
+.sa-fab-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sa-fab-dismiss-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #ffffff;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  transition: all 0.18s ease;
+  padding: 0;
+}
+
+.sa-fab-dismiss-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  transform: scale(1.08);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+}
+
 .sa-fab-btn {
   display: inline-flex;
   align-items: center;

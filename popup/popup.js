@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const scanList = document.getElementById("scan-list");
   const scanCountPill = document.getElementById("scan-count-pill");
   const alertBox = document.getElementById("popup-alert");
+  const toggleFloatingBtn = document.getElementById("toggle-floating-btn");
 
   function showAlert(msg, isError = false) {
     alertBox.textContent = msg;
@@ -25,6 +26,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function renderPopupState() {
     const state = await window.SmartApplyStorage.getState();
     const profile = await window.SmartApplyStorage.getActiveProfile();
+
+    if (toggleFloatingBtn) {
+      toggleFloatingBtn.checked = state.settings?.showFloatingButton !== false;
+    }
 
     profileSelect.innerHTML = Object.values(state.profiles)
       .map(
@@ -40,6 +45,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       comp.missing.length === 0
         ? `All ${comp.total} core profile fields saved!`
         : `${comp.filled}/${comp.total} fields ready • Missing: ${comp.missing.slice(0, 2).join(", ")}${comp.missing.length > 2 ? "..." : ""}`;
+  }
+
+  if (toggleFloatingBtn) {
+    toggleFloatingBtn.addEventListener("change", async (e) => {
+      const isEnabled = e.target.checked;
+      const state = await window.SmartApplyStorage.getState();
+      if (!state.settings) {
+        state.settings = { showFloatingButton: true, highlightFilledFields: true, minConfidenceThreshold: 0.72 };
+      }
+      state.settings.showFloatingButton = isEnabled;
+      await window.SmartApplyStorage.setState(state);
+      sendTabMessage({ action: "SETTINGS_UPDATED", settings: state.settings }, () => {});
+    });
   }
 
   profileSelect.addEventListener("change", async (e) => {
@@ -58,21 +76,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function sendTabMessage(payload, callback) {
     if (typeof chrome === "undefined" || !chrome.tabs) {
-      showAlert("Open this popup from the Brave extension toolbar on an active web page.", true);
+      if (payload.action !== "SETTINGS_UPDATED") {
+        showAlert("Open this popup from the Brave extension toolbar on an active web page.", true);
+      }
       return;
     }
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs && tabs[0];
       if (!tab || !tab.id) {
-        showAlert("No active tab detected.", true);
+        if (payload.action !== "SETTINGS_UPDATED") {
+          showAlert("No active tab detected.", true);
+        }
         return;
       }
       chrome.tabs.sendMessage(tab.id, payload, (response) => {
         if (chrome.runtime.lastError || !response) {
-          showAlert("Refresh the job page once after installing the extension, or open the Test Job Form below.", true);
+          if (payload.action !== "SETTINGS_UPDATED") {
+            showAlert("Refresh the job page once after installing the extension, or open the Test Job Form below.", true);
+          }
           return;
         }
-        callback(response);
+        if (callback) callback(response);
       });
     });
   }
