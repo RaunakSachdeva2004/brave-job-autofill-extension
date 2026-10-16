@@ -41,12 +41,12 @@ brave-job-autofill-extension/
 ├── content/
 │   ├── matcher.js                 # Heuristic label matcher, alias detector, and Smart Suggestion engine
 │   ├── autofill.js                # React/Vue/Angular-compatible DOM event dispatcher + DataTransfer resume upload
-│   ├── content.js                 # Floating autofill FAB widget, review panel, and MutationObserver for SPAs
-│   └── widget.css                 # Scoped stylesheet for the floating widget, review drawer, and highlights
+│   ├── content.js                 # Floating FAB with domain filter, dismiss button, review panel & MutationObserver
+│   └── widget.css                 # Scoped stylesheet for floating widget, dismiss button, drawer & highlights
 ├── popup/
-│   ├── popup.html                 # Brave toolbar popup UI
-│   ├── popup.css                  # Toolbar popup styling
-│   └── popup.js                   # Profile switcher, completion progress bar, scanner & quick-fill
+│   ├── popup.html                 # Brave toolbar popup UI with global floating button toggle switch
+│   ├── popup.css                  # Toolbar popup styling with switch slider
+│   └── popup.js                   # Profile switcher, completion progress bar, scanner, quick-fill & live toggle sync
 ├── options/
 │   ├── options.html               # Full profile management & configuration dashboard
 │   ├── options.css                # Responsive dashboard styling
@@ -114,8 +114,14 @@ SmartApply works on modern ATS platforms (Greenhouse, Lever, Workday, Ashby, Tal
 5. Inputs flash with a gentle green outline so you can immediately see what has been filled.
 
 ### 3.4 Using the Floating Widget & Smart Suggestions
-The floating widget includes a built-in review drawer with three tabs:
+The on-page floating widget (**⚡ Autofill Job Form**) provides real-time detection, instant autofill, and a built-in review drawer:
 
+- **Smart Visibility & Site Filtering**: SmartApply automatically suppresses the floating button on non-job websites (such as YouTube, Google, GitHub, X/Twitter, Reddit, and Netflix). It only appears when:
+  - The page contains at least 3 high-confidence matched job profile fields, **OR**
+  - The URL or page title contains job-related keywords (`apply`, `careers`, `job`, `application`, `workday`, `greenhouse`, `lever`, `ashby`, `smartrecruiters`).
+  - If 0 fields match on any page, the button is immediately hidden.
+- **One-Click Tab Dismiss (`×`)**: If you don't need autofill on a specific tab, click the small **`×`** dismiss button right next to the floating pill to hide it for that tab without affecting other tabs.
+- **Global Toolbar Toggle Switch**: Open the SmartApply toolbar popup at any time to toggle **"Show floating button on job pages"**. When switched off, the floating button is globally hidden across all tabs in real time.
 - **Review Matches**: Shows a list of every detected input on the page and the exact value SmartApply filled in.
 - **Missing Details**: Lists any inputs found on the job page where your active profile doesn't have a value set yet, prompting you to fill them in your profile.
 - **Smart Suggestions**: Job applications often have ambiguous or multi-purpose inputs (e.g., a field named `"Score / Marks"` could be your CGPA, 12th percentage, or 10th percentage; or `"Profile URL"` could be GitHub or LinkedIn). Instead of guessing blindly, SmartApply detects these and provides 1-click suggestion chips so you can choose the right one.
