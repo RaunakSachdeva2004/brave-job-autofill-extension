@@ -59,8 +59,11 @@ brave-job-autofill-extension/
 
 ## 2. Step-by-Step Installation in Brave
 
-1. **Open the Project**:
-   Ensure this project directory (`brave-job-autofill-extension`) is saved on your computer.
+1. **Download & Extract the Extension**:
+   - Go to the GitHub repository: [RaunakSachdeva2004/brave-job-autofill-extension](https://github.com/RaunakSachdeva2004/brave-job-autofill-extension).
+   - Click the green **Code** button and select **Download ZIP** (or run `git clone https://github.com/RaunakSachdeva2004/brave-job-autofill-extension.git`).
+   - Extract the downloaded `.zip` file on your computer.
+   - Note the folder path (ensure you select the folder containing `manifest.json`).
 2. **Open Brave Extensions Page**:
    In your Brave Browser address bar, navigate to:
    ```text
@@ -70,7 +73,7 @@ brave-job-autofill-extension/
    Toggle the **Developer mode** switch in the top-right corner to **ON**.
 4. **Load Unpacked Extension**:
    - Click the **Load unpacked** button in the top-left toolbar.
-   - In the file picker, select the `brave-job-autofill-extension` folder (the directory containing `manifest.json`).
+   - In the file picker, select the extracted `brave-job-autofill-extension` folder (the directory containing `manifest.json`).
 5. **Pin SmartApply to the Toolbar**:
    - Click the puzzle-piece Extensions icon in the Brave address bar / toolbar.
    - Click the **Pin** icon next to **SmartApply — Job Application Autofill for Brave** for quick 1-click access.
